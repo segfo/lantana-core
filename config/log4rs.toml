@@ -1,0 +1,35 @@
+# ログのリフレッシュレート
+refresh_rate = "30 seconds"
+
+[appenders.info]
+kind = "file"
+path = "logs/info.log"
+
+# ログのフォーマットの設定
+[appenders.info.encoder]
+pattern = "{d} [{t}]:{T}:{L} {l} {M}:{m}{n}"
+
+# ログレベルの設定
+[[appenders.info.filters]]
+kind = "threshold"
+level = "info"
+
+# warning以上のログをlogs/warn.logに出す設定。
+# もし、info以上がほしければ appenders.info（info部分は好きな値）を作成する。
+[appenders.warn]
+kind = "console"
+#path = "logs/warn.log"
+
+# ログのフォーマットの設定
+[appenders.warn.encoder]
+pattern = "{d} [{t}]:{T}:{L} {l} {M}:{m}{n}"
+
+# ログレベルの設定
+[[appenders.warn.filters]]
+kind = "threshold"
+level = "warn"
+
+# どのログの設定を使用するかの大域設定
+[root]
+level = "info"
+appenders = ["warn","info"]
