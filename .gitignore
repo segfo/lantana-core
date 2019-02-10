@@ -5,4 +5,5 @@ Cargo.lock
 *.dll
 *.log
 *.exe
+*.so
 lantana.toml

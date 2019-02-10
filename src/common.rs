@@ -14,6 +14,7 @@ trait OsStrExtension{
     fn to_wide_chars(&self) -> Vec<u16>;
 }
 
+#[cfg(windows)]
 fn from_wide_ptr(ptr: *const u16,size:isize) -> String {
     use std::ffi::OsString;
     use std::os::windows::ffi::OsStringExt;
@@ -43,7 +44,7 @@ impl PluginState{
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct InitData{
     module_path:PathBuf,
     loaded_modules:HashMap<String,PluginState>,
@@ -61,6 +62,11 @@ impl InitData{
     }
     pub fn find_loadmodule(&self,path:&PathBuf)->Option<&PluginState>{
         self.loaded_modules.get(&path.clone().into_os_string().into_string().unwrap())
+    }
+    pub fn get_plugin_directory(&self)->PathBuf{
+        let mut basedir = self.get_install_directory();
+        basedir.push(PLUGIN_DIR);
+        basedir
     }
 }
 
@@ -102,7 +108,12 @@ fn windows_init()->InitData{
 
 #[cfg(unix)]
 fn unix_init()->InitData{
-
+    // 全体設定を読み込む
+    InitData{
+        module_path: std::fs::read_link("/proc/self/exe").unwrap(),
+        loaded_modules: HashMap::new(),
+        config : None
+    }
 }
 use crate::load_config::*;
 pub fn application_init()->InitData{
@@ -131,11 +142,13 @@ pub fn application_init()->InitData{
             // 1. 古いファイルを日付をつけてバックアップする。
             GlobalConfig::backup(&mut file,CauseKind::BrokenFile);
             // 2. 新しい既定のコンフィグを書き込む
-            GlobalConfig::store(&mut file, GlobalConfig::new()).unwrap();
+            GlobalConfig::new().store(&mut file).unwrap();
             GlobalConfig::load(&mut file).unwrap()
         }
     };
     data.config = Some(config);
+    log::info!("config loaded");
+    log::info!("initialize phase done.");
     data
 }
 
@@ -190,7 +203,21 @@ fn debug_path_adjust(path:&mut PathBuf){
     path.pop();
 }
 
-pub fn init_plugin_modules(init_data:&mut InitData)->Vec<libloading::Library>{
+pub struct PluginInfo{
+    lib:libloading::Library,
+    dll:PathBuf
+}
+
+impl PluginInfo{
+    pub fn get_instance(&self)->&libloading::Library{
+        &self.lib
+    }
+    pub fn get_pluginpath(&self)->PathBuf{
+        self.dll.clone()
+    }
+}
+
+pub fn init_plugin_modules(init_data:&mut InitData)->Vec<PluginInfo>{
     let mut pulgin_dir = init_data.get_install_directory();
     
     #[cfg(debug_assertions)]
@@ -221,7 +248,7 @@ pub fn init_plugin_modules(init_data:&mut InitData)->Vec<libloading::Library>{
                 continue;
             }
         };
-        plugin_instances.push(lib);
+        plugin_instances.push(PluginInfo{lib:lib,dll:dll});
     }
     plugin_instances
 }

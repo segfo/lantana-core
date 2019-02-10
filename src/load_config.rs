@@ -49,12 +49,11 @@ pub enum CauseKind{
 
 pub trait Accessor{
     fn load(file:&mut File)->Result<Box<Self>,Box<Error>>;
-    fn store(file:&mut File,config:Self)->Result<(),Box<Error>>;
+    fn store(self,file:&mut File)->Result<(),Box<Error>>;
 }
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug,Serialize,Deserialize,Clone)]
 pub struct GlobalConfig{
-    
 }
 
 use log4rs;
@@ -85,15 +84,15 @@ impl Accessor for GlobalConfig{
         file.seek(SeekFrom::Start(0))?;
         let mut config_string = String::new();
         file.read_to_string(&mut config_string)?;
-        let config:GlobalConfig = toml::from_str(&config_string)?;
+        let config=toml::from_str(&config_string)?;
         Ok(Box::new(config))
     }
-    // ストアしたらConfigの所有権を奪う。
+    // ストアしたらselfの所有権を奪う。
     // 新たにインスタンスが必要であれば、再ロードしなければならない。
-    fn store(file:&mut File,config:Self)->Result<(),Box<Error>>{
+    fn store(self,file:&mut File)->Result<(),Box<Error>>{
         file.seek(SeekFrom::Start(0))?;
         file.set_len(0)?;
-        file.write(toml::to_string(&config)?.as_bytes())?;
+        file.write(toml::to_string(&self)?.as_bytes())?;
         file.flush()?;
         Ok(())
     }
