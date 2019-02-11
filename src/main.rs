@@ -47,9 +47,7 @@ fn pluginrun_with_observer<TArgs,TReturn>(method:&'static str,args:TArgs,lib:&co
     r
 }
 
-// エントリーポイント
-#[no_mangle]
-pub extern fn lantana_entry() {
+fn main() {
     let mut init_data = common::application_init();
     let plugin_instances = common::init_plugin_modules(&mut init_data);
 

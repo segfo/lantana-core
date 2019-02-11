@@ -201,7 +201,6 @@ pub fn dll_scan(dir: &PathBuf) -> io::Result<Vec<PathBuf>> {
 fn debug_path_adjust(path:&mut PathBuf){
     path.pop();
     path.pop();
-    path.pop();
 }
 
 pub struct PluginInfo{
