@@ -48,7 +48,8 @@ fn pluginrun_with_observer<TArgs,TReturn>(method:&'static str,args:TArgs,lib:&co
 }
 
 // エントリーポイント
-fn lanatana_entry() {
+#[no_mangle]
+pub extern fn lantana_entry() {
     let mut init_data = common::application_init();
     let plugin_instances = common::init_plugin_modules(&mut init_data);
 
@@ -91,10 +92,10 @@ impl LibLoadingExt for libloading::Library{
 
 #[cfg(test)]
 mod tests {
-    use crate::lanatana_entry;
+    use crate::lantana_entry;
     #[test]
     fn exec_main() {
-        lanatana_entry();
+        lantana_entry();
     }
 
     #[test]
