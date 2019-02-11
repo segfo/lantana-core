@@ -1,3 +1,6 @@
+//#![allow(dead_code)]
+#![allow(unused_imports)]
+
 use crate::const_values::*;
 use std::io::{Write,Read,Seek,SeekFrom};
 use std::error::Error;
@@ -73,9 +76,12 @@ impl GlobalConfig{
             .read(true).write(true)
             .create_new(true).open(date_str).unwrap();
         let mut buf = String::new();
-        file.seek(SeekFrom::Start(0));
+        file.seek(SeekFrom::Start(0)).expect("backup seek failre");
         file.read_to_string(&mut buf).unwrap();
-        backup.write(buf.as_bytes());
+        match backup.write(buf.as_bytes()){
+            Ok(bytes)=>log::info!("{} : {} bytes",BACKUP_WRITTEN,bytes),
+            Err(e)=>log::warn!("{}",e)
+        }
     }
 }
 
