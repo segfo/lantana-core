@@ -203,21 +203,28 @@ fn debug_path_adjust(path:&mut PathBuf){
     path.pop();
 }
 
+#[derive(Debug)]
 pub struct PluginInfo{
-    lib:libloading::Library,
-    dll:PathBuf
+    lib:Arc<libloading::Library>,
+    dll:PathBuf,
+    plugin:Option<Arc<iris_api::require::Plugin+Sync+Send>>
 }
 
 impl PluginInfo{
-    pub fn get_instance(&self)->&libloading::Library{
-        &self.lib
+    pub fn get_libloader(&self)->Arc<libloading::Library>{
+        self.lib.clone()
     }
     pub fn get_pluginpath(&self)->PathBuf{
         self.dll.clone()
     }
+    pub fn get_instance(&self)->Option<Arc<iris_api::require::Plugin+Sync+Send>>{
+        self.plugin.clone()
+    }
 }
 
-pub fn init_plugin_modules(init_data:&mut InitData)->Vec<PluginInfo>{
+use std::sync::{Arc};
+
+pub fn init_plugin_modules(init_data:&mut InitData)->Vec<Arc<PluginInfo>>{
     let mut pulgin_dir = init_data.get_install_directory();
     
     #[cfg(debug_assertions)]
@@ -248,7 +255,7 @@ pub fn init_plugin_modules(init_data:&mut InitData)->Vec<PluginInfo>{
                 continue;
             }
         };
-        plugin_instances.push(PluginInfo{lib:lib,dll:dll});
+        plugin_instances.push(Arc::new(PluginInfo{lib:Arc::new(lib),dll:dll,plugin:None}));
     }
     plugin_instances
 }

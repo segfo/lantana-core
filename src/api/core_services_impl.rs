@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 use std::path::PathBuf;
+use std::io::Write;
 
+#[derive(Debug)]
 pub struct LantanaCoreServices{
     dll_name:PathBuf
 }
@@ -12,7 +14,8 @@ impl LantanaCoreServices{
 
 impl iris_api::core::CoreServices for LantanaCoreServices{
     fn write_console(&self,s:String){
-        println!("{:?} : {}",self.dll_name,s);
+        print!("{:?} : {}",self.dll_name,s);
+        std::io::stdout().flush();
     }
     fn read_console(&self)->Result<String,std::io::Error>{
         let mut s=String::new();
